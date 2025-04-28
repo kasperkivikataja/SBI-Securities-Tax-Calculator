@@ -2,7 +2,22 @@ import os
 import csv
 import pymupdf
 
-# Header to value row index mapping
+# Folders
+parent_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+pdf_folder = os.path.join(parent_folder, 'PDF')
+output_folder = os.path.join(parent_folder, 'Output (CSV)')
+output_file_path = os.path.join(output_folder, "Output.csv")
+
+## Foreign ETF markers to know where data starts/ends
+Foreign_ETF_start_marker = "お問合せ先："
+Foreign_ETF_end_marker = "＊＊   以 　 上   ＊＊"
+
+## Japan ETF markets to know where data starts/ends
+Japan_ETF_start_marker = "取引店"
+Japan_ETF_end_marker = "◎投資信託は元金や利回りが保証されているものではありません。"
+
+# Pattern 4a) Foreign ETF <Header, Value> row index mapping
+# The reason is that data is extracted in an inconsistent order, hence the need to map it. The mapping also helps in case the order changes in the future.
 header_value_mapping = {
     0: 13,  # 国内約定年月日 (Header)
     1: 15,  # 国内受渡年月日 (Header)
@@ -29,40 +44,93 @@ header_value_mapping = {
     45: 19,  # 取引の種類 (Header)
 }
 
-## Foreign ETF markers to know where data starts/ends
-Foreign_ETF_start_marker = "お問合せ先："
-Foreign_ETF_end_marker = "＊＊   以 　 上   ＊＊"
+# Pattern 4b) Japan ETF <Header, Value> row index mapping
+# The reason is that data is extracted in an inconsistent order, hence the need to map it. The mapping also helps in case the order changes in the future.
+# <TBD>
 
-## Japan ETF markets to know where data starts/ends
-Japan_ETF_start_marker = "取引店"
-Japan_ETF_end_marker = "◎投資信託は元金や利回りが保証されているものではありません。"
+# Step 2: Extract text from all PDFs in the current directory
+def extract_text_from_all_pdfs():
+    try:
+        files = os.listdir(pdf_folder)
+        pdf_files = [file for file in files if file.lower().endswith('.pdf')]
 
-# Function to extract raw text from a page
-def extract_raw_text_from_page(page):
-    page_text = page.get_text("text")  # Extract plain text
-    return page_text
+        if not pdf_files:
+            print("No PDF files found in the directory.")
 
+        extracted_data = []
 
-# Function to process the extracted text and filter based on start and end markers
-def process_extracted_text(raw_text):
-    lines = raw_text.split('\n')
-    start_marker_found = False
+        # Process each PDF file
+        for pdf_file in pdf_files:
+            print(f"Extracting text from {pdf_file}...")
+            pdf_path = os.path.join(pdf_folder, pdf_file)
+            text = extract_text_from_pdf(pdf_path)
 
-    final_lines = []
+            if text:  # Only append if text was extracted
+                extracted_data.append(text)
 
-    # Check if the file is Foreign ETF or Japan ETF file
-    if "投資信託　取引報告書" == lines[1].strip():
-        final_lines = parse_text_from_japan_etf(lines)
-    elif "外国株式等 取引報告書" == lines[2].strip():
-        final_lines = parse_text_from_foreign_etf(lines)
-    else:
-        print("Error: Unknown data format.")
-        exit(1)
-
-    return final_lines
+        return extracted_data
+    except Exception as e:
+        print(f"Error processing PDFs: {e}")
+        return []
 
 
-# Function to parse Japan ETF files
+
+# Step 3: Extract text from a PDF file
+def extract_text_from_pdf(pdf_path):
+    try:
+        pdf_document = pymupdf.open(pdf_path)
+        full_text = []
+
+        for page_num in range(pdf_document.page_count):
+            page = pdf_document.load_page(page_num)
+            page_text = page.get_text("text") # Read page text
+
+            filtered_text = []
+            lines = page_text.split("\n")
+
+            # Check if the file is Foreign ETF or Japan ETF file
+            if "投資信託　取引報告書" == lines[1].strip():
+                filtered_text = parse_text_from_japan_etf(lines)
+            elif "外国株式等 取引報告書" == lines[2].strip():
+                filtered_text = parse_text_from_foreign_etf(lines)
+            else:
+                print("Error: Unknown data format.")
+                exit(1)
+
+            print("Filtered", filtered_text)
+            print("Filtered length", len(filtered_text))
+
+            # Process data in chunks of 46 items
+            for i in range(0, len(filtered_text), 46):
+                # Grab a chunk of 46 items (or the remaining items if less than 46)
+                chunk = filtered_text[i:i + 46]
+
+                # Initialize an empty list to hold the mapped data for this chunk
+                mapped_text = []
+
+                # Add PDF name on the first row
+                mapped_text.append(os.path.basename(pdf_document.name))
+
+                # Iterate over the header_value_mapping and extract corresponding values
+                for header, value in header_value_mapping.items():
+                    # Make sure the index exists within the chunk
+                    if header < len(chunk) and value < len(chunk):
+                        val = f"{chunk[value]}".replace(",", ".")
+                        #print("Val",val)
+                        mapped_text.append(val)
+
+                # Add mapped_text as a new row in full_text for this chunk
+                print("Appending mapped_text", mapped_text)
+                full_text.append(",".join(mapped_text))  # Join all the values in mapped_text with commas
+
+        return full_text
+
+    except Exception as e:
+        print(f"Error extracting text from {pdf_path}: {e}")
+        return []
+
+
+# Step 4: Pattern 1) Parse Japan ETF files
 def parse_text_from_japan_etf(lines):
     trade_count = 0
     line_count = 0
@@ -76,20 +144,19 @@ def parse_text_from_japan_etf(lines):
     return filtered_lines
 
 
+# Step 4: Pattern 2) Parse Japan ETF files
 # Function to parse Foreign ETF files
 def parse_text_from_foreign_etf(lines):
-
     trade_count = 0
     line_count = 0
     filtered_lines = []
+    start_marker_found = False
 
     for line in lines:
         if not start_marker_found:
-            if Foreign_ETF_start_marker:
-                line = line.split(Foreign_ETF_start_marker)[-1]
+            if Foreign_ETF_start_marker in line:
                 start_marker_found = True
-            else:
-                continue
+            continue
 
         if Foreign_ETF_end_marker in line:
             break
@@ -128,84 +195,10 @@ def parse_text_from_foreign_etf(lines):
                 line_count += 1
     return filtered_lines
 
-# Function to extract text from a PDF file
-def extract_text_from_pdf(pdf_path):
-    try:
-        pdf_document = pymupdf.open(pdf_path)
-        full_text = []
-
-        for page_num in range(pdf_document.page_count):
-            page = pdf_document.load_page(page_num)
-            page_text = extract_raw_text_from_page(page)
-
-            filtered_text = process_extracted_text(page_text)
-            print("Filtered", filtered_text)
-            print("Filtered length", len(filtered_text))
-
-            # Process data in chunks of 46 items
-            for i in range(0, len(filtered_text), 46):
-                # Grab a chunk of 46 items (or the remaining items if less than 46)
-                chunk = filtered_text[i:i + 46]
-
-                # Initialize an empty list to hold the mapped data for this chunk
-                mapped_text = []
-
-                mapped_text.append(os.path.basename(pdf_document.name))
-
-                # Iterate over the header_value_mapping and extract corresponding values
-                for header, value in header_value_mapping.items():
-                    # Make sure the index exists within the chunk
-                    if header < len(chunk) and value < len(chunk):
-                        val = f"{chunk[value]}".replace(",", ".")
-                        print("Val",val)
-                        mapped_text.append(val)
-
-                # Add mapped_text as a new row in full_text for this chunk
-                print("Appending mapped_text", mapped_text)
-                full_text.append(",".join(mapped_text))  # Join all the values in mapped_text with commas
-
-        return full_text
-
-    except Exception as e:
-        print(f"Error extracting text from {pdf_path}: {e}")
-        return []
 
 
-# Function to extract text from all PDFs in the current directory
-def extract_text_from_all_pdfs():
-    try:
-        # Get the current directory path
-        pdf_folder = os.path.join(os.getcwd(), 'PDF')
-        #print(f"Current directory: {pdf_folder}")
-
-        # List all files in the directory
-        files = os.listdir(pdf_folder)
-
-        # Filter PDF files from the list
-        pdf_files = [file for file in files if file.lower().endswith('.pdf')]
-
-        if not pdf_files:
-            print("No PDF files found in the directory.")
-
-        # Initialize list to store extracted data
-        extracted_data = []
-
-        # Process each PDF file
-        for pdf_file in pdf_files:
-            #print(f"Extracting text from {pdf_file}...")
-            pdf_path = os.path.join(pdf_folder, pdf_file)
-            text = extract_text_from_pdf(pdf_path)
-
-            if text:  # Only append if text was extracted
-                extracted_data.append(text)
-
-        return extracted_data
-    except Exception as e:
-        print(f"Error processing PDFs: {e}")
-        return []
-
-
-def save_to_csv(extracted_data, output_filename="extracted_text_limited.csv"):
+# Step 5: Save extracted data to CSV
+def save_to_csv(extracted_data, output_filename="Output.csv"):
     try:
         if not extracted_data:
             print("No data to save.")
@@ -218,7 +211,7 @@ def save_to_csv(extracted_data, output_filename="extracted_text_limited.csv"):
             '受渡金額', '消費税', '国内手数料', '円貨 (現地精算金額)', '外貨 (現地精算金額)', '取引の種類'
         ]
 
-        with open(output_filename, 'w', newline='', encoding='utf-8') as csvfile:
+        with open(output_file_path, 'w', newline='', encoding='utf-8') as csvfile:
             csv_writer = csv.writer(csvfile)
 
             # Write the headers first
@@ -237,7 +230,9 @@ def save_to_csv(extracted_data, output_filename="extracted_text_limited.csv"):
         print(f"Error saving to CSV: {e}")
 
 
-# Main execution
+# --------------------------------------------------------------------------------------------- #
+
+# Step 1: Main execution
 if __name__ == '__main__':
     try:
         # Extract text from all PDFs in the current directory
