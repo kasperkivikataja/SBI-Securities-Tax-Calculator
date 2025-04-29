@@ -1,7 +1,7 @@
 ## Foreign ETF markers to know where data starts/ends
 Foreign_ETF_start_marker = "お問合せ先："
 Foreign_ETF_end_marker = "＊＊   以 　 上   ＊＊"
-Foreign_ETF_chunk_size = 46 # We parse foreign data in such a way that we should have 46 items per ?
+Foreign_ETF_chunk_size = 46 # We parse foreign data in such a way that we should have 46 items
 
 # Pattern 4a) Foreign ETF <Header, Value> row index mapping
 # The reason is that data is extracted in an inconsistent order, hence the need to map it. The mapping also helps in case the order changes in the future.

@@ -22,7 +22,14 @@ Japan_ETF_header_value_mapping = {
 def parse_text_from_japan_etf(lines):
     filtered_lines = []
 
+    #for line in lines[Japan_ETF_startIndex:]:  # We start at index 6
+    #    line = unicodedata.normalize('NFKC', line)
+    #    line = line.strip()
+    #    print(line)
+    #exit()
+
     index = Japan_ETF_startIndex
+    linecount = Japan_ETF_startIndex
 
     # Add initial dates. These exist only at the start of the page.
     date1 = StringHelper.clean_date_string(lines[6]) # 約定日
@@ -35,7 +42,6 @@ def parse_text_from_japan_etf(lines):
         # A page  can end in two patterns
         if (line == Japan_ETF_end_marker1 or line == Japan_ETF_end_marker2):
             return filtered_lines
-
         # Check end marker first
         tradeEndMarker = all(key in line for key in ["市場", "取引", "受渡条件"]) # We find last, trade ends here
         if (tradeEndMarker):
@@ -67,6 +73,7 @@ def parse_text_from_japan_etf(lines):
             if required_keys.issubset(found_keys):
                 filtered_lines.extend(final_values)
                 index = Japan_ETF_startIndex
+                linecount += 1
                 continue
             else:
                 print("Error: Missing required keys. Found:", final_values)
@@ -77,14 +84,25 @@ def parse_text_from_japan_etf(lines):
             filtered_lines.append(date2)
 
         elif (index == 10): # 数量, 単価, 約定金額
-            values = lines[10].split()
+            values = lines[linecount].split()
             if len(values) == 3:
                 values = [v.replace("，", ".") for v in values]
                 filtered_lines.extend(values[:3])
+
+        elif (index == 11): # Clean parenthesis from 銘柄コード
+            line = line.replace("(", "")
+            line = line.replace(")", "")
+            line = line.replace(" ", "")
+            filtered_lines.append(line)
+
+        elif (index == 13): # Clean commas out of trade wins/losses
+            line = line.replace(",", ".")
+            filtered_lines.append(line)
         else:
             filtered_lines.append(line)
 
         index += 1
+        linecount += 1
 
 
     print("Error: Ran into exit. This should not happen.")

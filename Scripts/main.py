@@ -1,4 +1,5 @@
 import os
+import re
 import pymupdf
 import SaveData
 import Scripts.ParsePatterns.Foreign_ETF
@@ -26,8 +27,7 @@ def map_text_from_foreign_etf(filtered_text, pdf_document_name):
         for header, value in Scripts.ParsePatterns.Foreign_ETF.foreignETF_header_value_mapping.items():
             # Make sure the index exists within the chunk
             if header < len(chunk) and value < len(chunk):
-                val = f"{chunk[value]}".replace(",", ".")
-                # print("Val",val)
+                val = f"{chunk[value]}".replace(",", ".") # Do we need to do this here again...
                 mapped_text.append(val)
 
         # Add mapped_text as a new row in full_text for this chunk
@@ -36,15 +36,35 @@ def map_text_from_foreign_etf(filtered_text, pdf_document_name):
     return mapped_text
 
 # Step 4: Parse & Map data (Japan ETF pattern)
-def map_text_from_japan_etf():
-    exit()
-    # if index == 6:
-    #    line = clean_date_string(line)
-    #    print("Cleaned line", line)
-    # elif index == 7:
-    #    line = clean_date_string(line)
-    #    print("Cleaned line", line)
-    # elif index == 8:
+def map_text_from_japan_etf(filtered_text, pdf_document_name):
+
+    # Initialize an empty list to hold the mapped data for this chunk
+    mapped_text = []
+
+    # Add PDF name on the first row
+    mapped_text.append(pdf_document_name)
+
+    # Regex pattern for matching full-width or half-width date-like entries
+    date_pattern = re.compile(r'[\d０-９]{4}/[\d０-９]{1,2}/[\d０-９]{1,2}')
+
+    records = []
+    current_record = []
+
+    for item in filtered_text:
+        if date_pattern.match(item) and current_record:
+            records.append(current_record)
+            current_record = []
+        current_record.append(item)
+
+    # Append the last record
+    if current_record:
+        records.append(current_record)
+
+    # Print nicely
+    for i, record in enumerate(records, 1):
+        print(f"Record {i}:")
+        for field in record:
+            print(" ", field)
 
 # --------------------------------------------------------------------------------------------- #
 
@@ -63,17 +83,16 @@ def extract_text_from_pdf(pdf_path):
 
             # Check if the file is Foreign ETF or Japan ETF file
             if "投資信託　取引報告書" == lines[1].strip():
-                filtered_text = Scripts.FilePatterns.Japan_ETF.parse_text_from_japan_etf(lines)  # Step 1: Parse and clean up (Japan ETF)
-                full_text = map_text_from_japan_etf()  # Step 2: Map data for CSV (Japan ETF)
+                filtered_text = Scripts.ParsePatterns.Japan_ETF.parse_text_from_japan_etf(lines)  # Step 1: Parse and clean up (Japan ETF)
+                full_text = map_text_from_japan_etf(filtered_text, pdf_document.name)  # Step 2: Map data for CSV (Japan ETF)
+
             elif "外国株式等 取引報告書" == lines[2].strip():
-                filtered_text = Scripts.FilePatterns.Foreign_ETF.parse_text_from_foreign_etf(lines)  # Step 1: Parse and clean up (Foregn ETF)
+                filtered_text = Scripts.ParsePatterns.Foreign_ETF.parse_text_from_foreign_etf(lines)  # Step 1: Parse and clean up (Foregn ETF)
                 full_text = map_text_from_foreign_etf(filtered_text, pdf_document.name)  # Step 2: Map data for CSV (Foregn ETF)
+
             else:
                 print("Error: Unknown data format.")
                 exit(1)
-
-            print("Filtered", filtered_text)
-            print("Filtered length", len(filtered_text))
 
         return full_text
 
