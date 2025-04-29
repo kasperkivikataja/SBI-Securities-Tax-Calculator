@@ -6,8 +6,7 @@ Although SBI Securities provides CSV data of trades, these CSV files often diffe
 - Calculating Profit & Loss data for “Ippan Koza” accounts
 - Verifying your own tax calculations
 
-**How**:
-Fortunately, SBI Securities provides complete trade data in PDF format. This tool works by:
-
-- Extracting all trade data from PDFs into CSV files (via Python script)
-- Calculating Profit & Loss based on the CSV file using a Google Sheet (JavaScript / Google Apps Script)
+**How It Works**
+Step 1: Download your trade data PDFs from the SBI trading portal.
+Step 2: Run this program to automatically extract and convert the trade information into a .CSV file.
+Step 3: Open the .CSV file in Excel or Google Sheets to calculate your taxes, or use the included estimates for a quick overview.
