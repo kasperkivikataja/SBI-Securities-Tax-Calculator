@@ -7,6 +7,6 @@ Although SBI Securities provides CSV data of trades, these CSV files often diffe
 - Verifying your own tax calculations
 
 **How It Works**<br>
-Step 1: Download your trade data PDFs from the SBI trading portal.
-Step 2: Run this program to automatically extract and convert the trade information into a .CSV file.
-Step 3: Open the .CSV file in Excel or Google Sheets to calculate your taxes, or use the included estimates for a quick overview.
+<u>Step 1</u>: Download your trade data PDFs from the SBI trading portal.<br>
+<u>Step 2</u>: Run this program to automatically extract and convert the trade information into a .CSV file.<br>
+<u>Step 3</u>: Open the .CSV file in Excel or Google Sheets to calculate your taxes, or use the included estimates for a quick overview.<br>
