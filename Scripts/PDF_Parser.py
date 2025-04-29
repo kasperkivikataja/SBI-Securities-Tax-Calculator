@@ -1,6 +1,9 @@
 import os
+from operator import index
 import pymupdf
 import SaveData
+from Scripts.StringHelper import clean_date_string
+import unicodedata
 
 # Folders
 parent_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -10,14 +13,17 @@ output_file_path = os.path.join(parent_folder, 'Output/Output.csv')
 ## Foreign ETF markers to know where data starts/ends
 Foreign_ETF_start_marker = "お問合せ先："
 Foreign_ETF_end_marker = "＊＊   以 　 上   ＊＊"
+Foreign_ETF_chunk_size = 46 # We parse foreign data in such a way that we should have 46 items per ?
 
 ## Japan ETF markets to know where data starts/ends
-Japan_ETF_start_marker = "取引店"
+Japan_ETF_startIndex = 6
+#Japan_ETF_start_marker = "取引店"
 Japan_ETF_end_marker = "◎投資信託は元金や利回りが保証されているものではありません。"
 
 # Pattern 4a) Foreign ETF <Header, Value> row index mapping
 # The reason is that data is extracted in an inconsistent order, hence the need to map it. The mapping also helps in case the order changes in the future.
-header_value_mapping = {
+
+foreignETF_header_value_mapping = {
     0: 13,  # 国内約定年月日 (Header)
     1: 15,  # 国内受渡年月日 (Header)
     2: 14,  # 現地約定年月日 (Header)
@@ -46,6 +52,14 @@ header_value_mapping = {
 # Pattern 4b) Japan ETF <Header, Value> row index mapping
 # The reason is that data is extracted in an inconsistent order, hence the need to map it. The mapping also helps in case the order changes in the future.
 # <TBD>
+
+Japan_ETF_header_value_mapping = {
+    6: 0, # (Header) 約定日
+    7: 0, # (Header) ご精算日
+        0: 8, # (Value) 銘柄名（銘柄コード） (Same as below)
+        0: 9, # (Value) (Same as above)
+        0: 10 # (Value)
+}
 
 # Step 2: Extract text from all PDFs in the current directory
 def extract_text_from_all_pdfs():
@@ -89,38 +103,18 @@ def extract_text_from_pdf(pdf_path):
 
             # Check if the file is Foreign ETF or Japan ETF file
             if "投資信託　取引報告書" == lines[1].strip():
-                filtered_text = parse_text_from_japan_etf(lines)
+                filtered_text = parse_text_from_japan_etf(lines) # First, parse lines
+                exit()
+                full_text = map_text_from_japan_etf() # Second, map data
             elif "外国株式等 取引報告書" == lines[2].strip():
                 filtered_text = parse_text_from_foreign_etf(lines)
+                full_text = map_text_from_foreign_etf(filtered_text, pdf_document.name)
             else:
                 print("Error: Unknown data format.")
                 exit(1)
 
             print("Filtered", filtered_text)
             print("Filtered length", len(filtered_text))
-
-            # Process data in chunks of 46 items
-            for i in range(0, len(filtered_text), 46):
-                # Grab a chunk of 46 items (or the remaining items if less than 46)
-                chunk = filtered_text[i:i + 46]
-
-                # Initialize an empty list to hold the mapped data for this chunk
-                mapped_text = []
-
-                # Add PDF name on the first row
-                mapped_text.append(os.path.basename(pdf_document.name))
-
-                # Iterate over the header_value_mapping and extract corresponding values
-                for header, value in header_value_mapping.items():
-                    # Make sure the index exists within the chunk
-                    if header < len(chunk) and value < len(chunk):
-                        val = f"{chunk[value]}".replace(",", ".")
-                        #print("Val",val)
-                        mapped_text.append(val)
-
-                # Add mapped_text as a new row in full_text for this chunk
-                print("Appending mapped_text", mapped_text)
-                full_text.append(",".join(mapped_text))  # Join all the values in mapped_text with commas
 
         return full_text
 
@@ -135,26 +129,37 @@ def parse_text_from_japan_etf(lines):
     line_count = 0
     filtered_lines = []
 
-    # First data is in row 6 initially, or when we run into 3 digit, 6 digit and 3 digit like value (Example:３３２　　　　　１３７０７３　　　０３０)
+    index = Japan_ETF_startIndex
 
-    # End of page is always at: ◎投資信託は元金や利回りが保証されているものではありません?
-    # End of trade is when we run into: 市場：東京　　　　　取引：委託　普通取引　　　受渡条件：代用預り　特定区分：一般
-    index = 6
-    for line in lines[6:]:
+    for line in lines[Japan_ETF_startIndex:]: # We start at index 6
+        line = unicodedata.normalize('NFKC', line)
         line = line.strip()
-        print(line)
-        #if index == 6:
-        #    line = clean_date_string(line)
-        #    print("Cleaned line", line)
-        #elif index == 7:
-        #    line = clean_date_string(line)
-        #    print("Cleaned line", line)
-        #elif index == 8:
 
-        #else:
-        #    print(line)
+        # Check end marker first
+        endMarker = all(key in line for key in ["市場：", "取引：", "受渡条件："]) # We find last, trade ends here
+        if (endMarker):
+            trade_count += 1
+            print("Trade count", trade_count)
+            print()
+            print()
+
+        if (index == 6 or index == 7): # Dates
+            line = clean_date_string(line)
+            filtered_lines.append(line)
+        elif (index == 10): # 数量, 単価, 約定金額
+            values = lines[10].split()
+            if len(values) == 3:
+                values = [v.replace("，", ".") for v in values]
+                filtered_lines.append(values[0])
+                filtered_lines.append(values[1])
+                filtered_lines.append(values[2])
+        else:
+            filtered_lines.append(line)
+
         index += 1
         line_count += 1
+
+    print(filtered_lines)
     return filtered_lines
 
 
@@ -208,6 +213,42 @@ def parse_text_from_foreign_etf(lines):
                 filtered_lines.append(line.strip())
                 line_count += 1
     return filtered_lines
+
+
+def map_text_from_foreign_etf(filtered_text, pdf_document_name):
+    # Process data in chunks of 46 items
+    for i in range(0, len(filtered_text), Foreign_ETF_chunk_size):
+        # Grab a chunk of 46 items (or the remaining items if less than 46)
+        chunk = filtered_text[i:i + Foreign_ETF_chunk_size]
+
+        # Initialize an empty list to hold the mapped data for this chunk
+        mapped_text = []
+
+        # Add PDF name on the first row
+        mapped_text.append(pdf_document_name)
+
+        # Iterate over the header_value_mapping and extract corresponding values
+        for header, value in foreignETF_header_value_mapping.items():
+            # Make sure the index exists within the chunk
+            if header < len(chunk) and value < len(chunk):
+                val = f"{chunk[value]}".replace(",", ".")
+                # print("Val",val)
+                mapped_text.append(val)
+
+        # Add mapped_text as a new row in full_text for this chunk
+        print("Appending mapped_text", mapped_text)
+        mapped_text.append(",".join(mapped_text))  # Join all the values in mapped_text with commas
+    return mapped_text
+
+def map_text_from_japan_etf():
+    exit()
+    # if index == 6:
+    #    line = clean_date_string(line)
+    #    print("Cleaned line", line)
+    # elif index == 7:
+    #    line = clean_date_string(line)
+    #    print("Cleaned line", line)
+    # elif index == 8:
 
 # --------------------------------------------------------------------------------------------- #
 
