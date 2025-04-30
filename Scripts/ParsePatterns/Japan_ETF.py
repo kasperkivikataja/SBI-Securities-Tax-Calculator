@@ -19,7 +19,7 @@ Japan_ETF_header_value_mapping = {
         0: 10 # (Value)
 }
 
-def parse_text_from_japan_etf(lines):
+def parse_values_from_japan_etf(lines):
     filtered_lines = []
 
     #for line in lines[Japan_ETF_startIndex:]:  # We start at index 6
