@@ -12,6 +12,9 @@ output_file_path = os.path.join(parent_folder, 'Output/Output.csv')
 
 # Step 4: Parse & Map data (Foreign ETF pattern)
 def map_text_from_foreign_etf(filtered_text, pdf_document_name):
+
+    print("AA", filtered_text)
+
     # Process data in chunks of 46 items
     for i in range(0, len(filtered_text), Scripts.ParsePatterns.Foreign_ETF.Foreign_ETF_chunk_size):
         # Grab a chunk of 46 items (or the remaining items if less than 46)
@@ -31,13 +34,15 @@ def map_text_from_foreign_etf(filtered_text, pdf_document_name):
                 mapped_text.append(val)
 
         # Add mapped_text as a new row in full_text for this chunk
-        print("Appending mapped_text", mapped_text)
         mapped_text.append(",".join(mapped_text))  # Join all the values in mapped_text with commas
+
     return mapped_text
 
 # Step 4: Parse & Map data (Japan ETF pattern)
 def map_text_from_japan_etf(filtered_text, pdf_document_name):
 
+    print(filtered_text)
+    exit()
     # Initialize an empty list to hold the mapped data for this chunk
     mapped_text = []
 
@@ -77,6 +82,7 @@ def extract_text_from_pdf(pdf_path):
         for page_num in range(pdf_document.page_count):
             page = pdf_document.load_page(page_num)
             page_text = page.get_text("text")  # Read page text
+            pdf_name = os.path.basename(pdf_path)
 
             filtered_text = []
             lines = page_text.split("\n")
@@ -84,11 +90,11 @@ def extract_text_from_pdf(pdf_path):
             # Check if the file is Foreign ETF or Japan ETF file
             if "投資信託　取引報告書" == lines[1].strip():
                 filtered_text = Scripts.ParsePatterns.Japan_ETF.parse_text_from_japan_etf(lines)  # Step 1: Parse and clean up (Japan ETF)
-                full_text = map_text_from_japan_etf(filtered_text, pdf_document.name)  # Step 2: Map data for CSV (Japan ETF)
+                full_text = map_text_from_japan_etf(filtered_text, pdf_name)  # Step 2: Map data for CSV (Japan ETF)
 
             elif "外国株式等 取引報告書" == lines[2].strip():
                 filtered_text = Scripts.ParsePatterns.Foreign_ETF.parse_text_from_foreign_etf(lines)  # Step 1: Parse and clean up (Foregn ETF)
-                full_text = map_text_from_foreign_etf(filtered_text, pdf_document.name)  # Step 2: Map data for CSV (Foregn ETF)
+                full_text = map_text_from_foreign_etf(filtered_text, pdf_name)  # Step 2: Map data for CSV (Foregn ETF)
 
             else:
                 print("Error: Unknown data format.")
