@@ -1,8 +1,6 @@
 import unicodedata
 from datetime import datetime
 
-from Scripts.main import output_file_path
-
 Foreign_ETF_start_marker = "取引通貨"
 Foreign_ETF_end_marker = "**   以   上   **"
 Foreign_ETF_expected_value_count = 24 # 23 values + PDF name in the end
