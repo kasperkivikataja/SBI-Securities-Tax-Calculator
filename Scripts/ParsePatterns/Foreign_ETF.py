@@ -1,3 +1,9 @@
+"""
+    Developer: Kasper Kivikataja
+    Date: May 1st, 2025
+    Purpose: Parses Foreign ETF PDF formatting and cleans it up for saving
+"""
+
 import unicodedata
 from datetime import datetime
 

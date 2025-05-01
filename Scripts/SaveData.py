@@ -1,3 +1,10 @@
+"""
+    Developer: Kasper Kivikataja
+    Date: May 1st, 2025
+    Purpose: Saves parsed PDF data into CSVs. Each pattern (e.g., foreign ETFs, Japan ETFs) are saved into
+    their respective files
+"""
+
 import csv
 import Scripts
 import os

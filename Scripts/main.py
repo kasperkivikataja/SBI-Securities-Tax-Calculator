@@ -1,3 +1,9 @@
+"""
+    Developer: Kasper Kivikataja
+    Date: May 1st, 2025
+    Purpose: Calls PDF readers to parse data. Once parsing is done, calls SaveData class when it receives parsed data.
+"""
+
 import os
 import pymupdf
 import SaveData

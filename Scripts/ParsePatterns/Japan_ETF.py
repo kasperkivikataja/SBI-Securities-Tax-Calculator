@@ -1,8 +1,12 @@
-from operator import index
+"""
+    Developer: Kasper Kivikataja
+    Date: May 1st, 2025
+    Purpose: Parses Japan ETF PDF formatting and cleans it up for saving
+"""
 
+from Scripts import StringHelper
 import unicodedata
 import re
-from Scripts import StringHelper
 
 ## Japan ETF markets to know where data starts/ends
 Japan_ETF_startIndex = 6
