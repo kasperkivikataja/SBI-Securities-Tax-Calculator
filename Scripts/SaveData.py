@@ -22,23 +22,26 @@ def commit(extracted_data, output_folder):
 
             # Process Foreign format
             if file_format == "Foreign":
-                print("Processing Foreign format...")
+                #print("Processing Foreign format...")
 
                 # Chunk the values into rows of 23 items each
-                foreign_rows.extend(chunk_list(values, 23))
+                foreign_rows.extend(chunk_list(values, Scripts.ParsePatterns.Foreign_ETF.Foreign_ETF_expected_value_count))
 
             # Process Japan format
             elif file_format == "Japan":
-                print("Processing Japan format...")
+                #print("Processing Japan format...")
 
-                # Chunk the values into rows of 23 items each
-                japan_rows.extend(chunk_list(values, 23))
+                # Chunk the values into rows of ? items each
+                japan_rows.extend(chunk_list(values, 23)) # <<<<<<---------- 23 is incorrect for Japan
 
         # Helper function to write data to CSV
         def write_csv(path, headers, rows):
+            headers_with_pdf_name = headers
+            headers_with_pdf_name.insert(0, "File")
+
             with open(path, 'w', newline='', encoding='utf-8') as f:
                 writer = csv.writer(f)
-                writer.writerow(headers)
+                writer.writerow(headers_with_pdf_name)
                 writer.writerows(rows)
 
         # Write Foreign ETF CSV if there are rows to write
@@ -57,7 +60,7 @@ def commit(extracted_data, output_folder):
                 japan_rows
             )
 
-        print("Data saved to CSV files successfully.")
+        #print("Data saved to CSV files successfully.")
 
     except Exception as e:
         print(f"Error saving to CSV: {e}")

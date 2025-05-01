@@ -24,11 +24,11 @@ def extract_text_from_pdf(pdf_path):
 
             # Determine the format
             if "投資信託　取引報告書" == lines[1].strip():
-                parsed_values = Scripts.ParsePatterns.Japan_ETF.parse_values_from_japan_etf(lines)
+                parsed_values = Scripts.ParsePatterns.Japan_ETF.parse_values_from_japan_etf(lines, pdf_name)
                 return {"pdf": pdf_name, "format": "Japan", "values": parsed_values}
 
             elif "外国株式等 取引報告書" == lines[2].strip():
-                parsed_values = Scripts.ParsePatterns.Foreign_ETF.parse_values_from_foreign_etf(lines)
+                parsed_values = Scripts.ParsePatterns.Foreign_ETF.parse_values_from_foreign_etf(lines, pdf_name)
                 return {"pdf": pdf_name, "format": "Foreign", "values": parsed_values}
 
             else:
@@ -51,8 +51,10 @@ def extract_text_from_all_pdfs():
 
         extracted_data = {}
 
+        pdf_count = 0;
         for pdf_file in pdf_files:
-            print(f"Extracting text from {pdf_file}...")
+            pdf_count += 1;
+            print(f"Extracting text from {pdf_file}... ({pdf_count}/{len(pdf_files)})")
             pdf_path = os.path.join(pdf_folder, pdf_file)
             result = extract_text_from_pdf(pdf_path)
 
@@ -77,6 +79,6 @@ if __name__ == '__main__':
         # Save the extracted data to a CSV file
         SaveData.commit(extracted_data, output_file_path)
 
-        print("Extraction complete!")
+        #print("Extraction complete!")
     except Exception as e:
         print(f"Error during execution: {e}")
