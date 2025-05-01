@@ -32,7 +32,7 @@ def commit(extracted_data, output_folder):
                 #print("Processing Japan format...")
 
                 # Chunk the values into rows of ? items each
-                japan_rows.extend(chunk_list(values, 23)) # <<<<<<---------- 23 is incorrect for Japan
+                japan_rows.extend(chunk_list(values, Scripts.ParsePatterns.Japan_ETF.Japan_ETF_expected_value_count))
 
         # Helper function to write data to CSV
         def write_csv(path, headers, rows):

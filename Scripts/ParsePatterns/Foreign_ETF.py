@@ -15,8 +15,8 @@ Foreign_ETF_unwanted_headers = [
     "備考", "現地精算金額", "国内約定年月日国内受渡年月日", "現地約定年月日現地受渡年月日", "銘 柄 名", "円貨", "外貨"
 ]
 
-# Step 4: Pattern 2) Parse Japan ETF files
-# Function to parse Foreign ETF files
+# --------------------------------------------------------------------------------------------- #
+
 def parse_values_from_foreign_etf(lines, pdf_name):
     final_values = []
     startmarker_found = False
@@ -65,6 +65,7 @@ def parse_values_from_foreign_etf(lines, pdf_name):
     return final_values
 
 
+# --------------------------------------------------------------------------------------------- #
 
 def add_empty_fields(tradeCount, final_values):
     insert_index = 14 * tradeCount

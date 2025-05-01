@@ -1,71 +1,104 @@
+from operator import index
+
 import unicodedata
 import re
 from Scripts import StringHelper
 
 ## Japan ETF markets to know where data starts/ends
-Japan_ETF_startIndex = 11
+Japan_ETF_startIndex = 6
 Japan_ETF_end_marker1 = "◎投資信託は元金や利回りが保証されているものではありません。"
 Japan_ETF_end_marker2 = "以下余白"
 Japan_ETF_expected_value_count = 15 # 14 + 1 values + PDF name in the end
 
 Japan_ETF_headers = [
-    ""
-]
-
-Japan_ETF_unwanted_headers = [
-    ""
+    "約定日", "ご精算日", "銘柄名", "数量", "単価", "約定金額", "銘柄コード", "取引区分", "ご精算金額",
+    # Note 1: "市場", "取引", "受渡条件" are in all files
+    # Note 2: "特定区分", "譲渡益税区分" can change depending on file
+    "市場", "取引", "受渡条件", "(特定)区分", "譲渡益税区分"
 ]
 
 Japan_ETF_known_keys = ['市場', '取引', '受渡条件', '特定区分', '譲渡益税区分']
 Japan_ETF_extra_keywords = ['NISA成長投資枠']  # Standalone labels that can appear after values
 Japan_ETF_required_keys = {'市場', '取引', '受渡条件'}
 
+# --------------------------------------------------------------------------------------------- #
+
 def parse_values_from_japan_etf(lines, pdf_name):
     final_values = []
+    trade_count = 0
+    index = 0
 
-    # 1. Add initial dates. These exist only at the start of the page.
-    final_values.append(clean_line(StringHelper.clean_date_string(lines[6])))  # 約定日
-    final_values.append(clean_line(StringHelper.clean_date_string(lines[7])))  # ご精算日
+    for line in lines[Japan_ETF_startIndex:]:
+        line = line.strip()
+        line = unicodedata.normalize('NFKC', line)
+
+        if line.startswith("市場"):
+            addedValues = add_trade_data(lines, index)
+            final_values.extend(addedValues)
+            insert_index = trade_count * Japan_ETF_expected_value_count
+            trade_count += 1
+            add_pdf_and_dates(final_values, insert_index, pdf_name, lines[Japan_ETF_startIndex], lines[Japan_ETF_startIndex + 1])
+
+        elif Japan_ETF_end_marker1 in line or Japan_ETF_end_marker2 in line:
+            break
+        index += 1
+    #print("AA",final_values)
+    return final_values
+
+# --------------------------------------------------------------------------------------------- #
+
+def add_trade_data(lines, index):
+    final_values = []
 
     # 2. Combine index 8 and 9 as they are part of 銘柄名
-    final_values.append(clean_line(lines[8] + lines[9]))
+    final_values.append(clean_line(lines[index] + lines[index + 1]))
 
     # 3. Separate three integers
-    values = lines[10].split()
+    values = lines[index + 2].split()
     if len(values) == 3:
         for value in values:
-            value = clean_line(value)
+            value = clean_integer(value)
             final_values.append(value)
 
     # 4. Clean 銘柄コード parenthesis and empty spaces
-    ticker = clean_line(lines[11])
+    ticker = clean_line(lines[index + 3])
     ticker = clean_parenthesis(ticker)
     final_values.append(ticker)
 
     # 5. Add buy/sell
-    final_values.append(clean_line(lines[12]))
-    final_values.append(clean_line(lines[13]))
+    final_values.append(clean_line(lines[index + 4]))
 
-    # 6. Clean ['市場', '取引', '受渡条件', '特定区分', '譲渡益税区分']
-    market_data = clean_line(lines[14])
+    # 6. Add Buy/Sell Price
+    final_values.append(clean_integer(lines[index + 5]))
+
+    # 7. Clean ['市場', '取引', '受渡条件', '特定区分', '譲渡益税区分']
+    market_data = clean_line(lines[index + 6])
     market_data = clean_market_data(market_data)
     final_values.extend(market_data)
 
-    # 7. Add PDF
-    final_values.insert(0, pdf_name)
-
-    print(final_values)
-
-    exit()
     return final_values
 
+# --------------------------------------------------------------------------------------------- #
+
+def add_pdf_and_dates(final_values, index, pdf_name, date1, date2):
+    final_values.insert(index, pdf_name)
+    final_values.insert(index + 1, clean_line(StringHelper.clean_date_string(date1)))  # 約定日
+    final_values.insert(index + 2, clean_line(StringHelper.clean_date_string(date2)))  # ご精算日
 
 def clean_line(line):
     newLine = line.strip()
     newLine = unicodedata.normalize('NFKC', newLine)
+    newLine = newLine.replace("，", ".")
     newLine = newLine.replace(",", ".")
     newLine = newLine.replace(" ", "")
     return newLine
+
+def clean_integer(line):
+    line = line.strip()
+    line = unicodedata.normalize('NFKC', line)
+    line = line.replace(",", "")
+    line = line.replace(" ", "")
+    return line
 
 def clean_parenthesis(line):
     newLine = line.replace("(", "")
@@ -73,24 +106,36 @@ def clean_parenthesis(line):
     return newLine
 
 def clean_market_data(line):
-    print("Market Data Before: ", line)
+    #print("Market Data Before:", line)
 
-    # Match key:value pairs (up to the next known key or end of line)
-    pattern = r'(?:' + '|'.join(Japan_ETF_known_keys) + r'):[^:]+?(?=(?:' + '|'.join(Japan_ETF_known_keys) + r')\:|$)'
-    values = re.findall(pattern, line)
-    values = [v.strip().replace("，", ".") for v in values]
+    # Step 1: Extract NISA-related keyword if present
+    nisa_value = ""
+    for keyword in Japan_ETF_extra_keywords:
+        if keyword in line:
+            idx = line.index(keyword)
+            nisa_value = line[idx:].strip()
+            line = line[:idx].strip()  # remove NISA part from the main line
+            break  # only extract first matching keyword
 
-    # Post-process: split off any extra keywords attached after a value
-    return_values = []
-    for v in values:
-        for keyword in Japan_ETF_extra_keywords:
-            if keyword in v and not v.startswith(keyword):
-                # Split and append both parts
-                before, after = v.split(keyword, 1)
-                return_values.append(before.strip())
-                return_values.append(keyword)
-                break
-        else:
-            return_values.append(v)
-    print("After: ", return_values)
-    return return_values
+    # Step 2: Match key-value pairs
+    pattern = r'(' + '|'.join(Japan_ETF_known_keys) + r'):(.*?)(?=' + '|'.join(Japan_ETF_known_keys) + r':|$)'
+    matches = re.findall(pattern, line)
+
+    # Step 3: Build dictionary and clean values
+    data_dict = {k: v.strip().replace("，", ".") for k, v in matches}
+
+    # Step 4: Ensure we always return values in the expected key order
+    result = []
+    for key in Japan_ETF_known_keys:
+        val = data_dict.get(key, "")
+        # Inject NISA keyword into 特定区分 if it's missing
+        if key == "特定区分" and val == "" and nisa_value:
+            val = nisa_value
+        result.append(val)
+
+    #print("After:", result)
+    return result
+
+
+
+
