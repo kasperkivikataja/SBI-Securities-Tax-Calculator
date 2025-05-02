@@ -5,6 +5,8 @@
 """
 
 import os
+from operator import index
+
 import pymupdf
 import SaveData
 import Scripts.ParsePatterns.Foreign_ETF
@@ -28,7 +30,7 @@ def extract_text_from_pdf(pdf_path):
             page_text = page.get_text("text")
             lines = page_text.split("\n")
 
-            # Determine the format
+            # ETFs
             if "投資信託　取引報告書" == lines[1].strip():
                 parsed_values = Scripts.ParsePatterns.Japan_ETF.parse_values_from_japan_etf(lines, pdf_name)
                 return {"pdf": pdf_name, "format": "Japan", "values": parsed_values}
@@ -36,6 +38,33 @@ def extract_text_from_pdf(pdf_path):
             elif "外国株式等 取引報告書" == lines[2].strip():
                 parsed_values = Scripts.ParsePatterns.Foreign_ETF.parse_values_from_foreign_etf(lines, pdf_name)
                 return {"pdf": pdf_name, "format": "Foreign", "values": parsed_values}
+
+            # ----------------------------------------------#
+
+            # Trade Reports
+            elif "Trade Report" == lines[2].strip():
+                print("Skipping trade report")
+                break # Dont read rest of the pages
+
+            elif "取引残高報告書" == lines[0].strip():
+                print("Skipping Balance report #1")
+                break  # Dont read rest of the pages
+
+            elif "【送付のご案内】" == lines[6].strip() and "【お客様へのお知らせ】" == lines[13].strip():
+                print("Skipping Balance report #2 (明細)")
+                break  # Dont read rest of the pages
+            #----------------------------------------------#
+
+            # Dividends
+            elif "外国株式等　配当金等のご案内" == lines[3].strip():
+                print("Skipping Foreign Dividend report")
+                break  # Dont read rest of the pages
+
+            elif "Japan Dividend Report" == lines[2].strip():
+                print("Skipping Japan Dividend report")
+                break  # Dont read rest of the pages
+
+            # ----------------------------------------------#
 
             else:
                 print(f"Unknown format in {pdf_name}")
@@ -64,8 +93,9 @@ def extract_text_from_all_pdfs():
             pdf_path = os.path.join(pdf_folder, pdf_file)
             result = extract_text_from_pdf(pdf_path)
 
-            if result.get("values"):  # Safely check for "values"
-                extracted_data[pdf_file] = result  # Use filename as key
+            if not result is None:
+                if result.get("values"):  # Safely check for "values"
+                    extracted_data[pdf_file] = result  # Use filename as key
 
         return extracted_data
 
