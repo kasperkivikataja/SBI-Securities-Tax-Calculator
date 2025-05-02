@@ -16,4 +16,5 @@ Although SBI Securities provides CSV data of trades, these CSV files often diffe
 - Or run manually using python files (requires installation of Python)
 
 **Download**:<br>
-TBD
+- Clone this PJ or
+- Download link provided at when release: [www.kasperkivikataja](https://kasperkivikataja.com/projects/sbi-securities-tax-calculator/)
