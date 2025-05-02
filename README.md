@@ -17,4 +17,4 @@ Although SBI Securities provides CSV data of trades, these CSV files often diffe
 
 **Download**:<br>
 - Clone this PJ **or**
-- Download link provided at when release: [[www.kasperkivikataja.com/](https://kasperkivikataja.com/projects/sbi-securities-tax-calculator/)](https://kasperkivikataja.com/projects/sbi-securities-tax-calculator/)
+- Download link provided at when release: https://kasperkivikataja.com/projects/sbi-securities-tax-calculator/
