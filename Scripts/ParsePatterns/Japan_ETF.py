@@ -4,6 +4,7 @@
     Purpose: Parses Japan ETF PDF formatting and cleans it up for saving
 """
 
+import Scripts
 from Scripts import StringHelper
 import unicodedata
 import re
@@ -33,8 +34,7 @@ def parse_values_from_japan_etf(lines, pdf_name):
     index = 0
 
     for line in lines[Japan_ETF_startIndex:]:
-        line = line.strip()
-        line = unicodedata.normalize('NFKC', line)
+        line = Scripts.StringHelper.clean_line_strip_and_unicode_normalize(line)
 
         if line.startswith("市場"):
             addedValues = add_trade_data(lines, index)
@@ -46,7 +46,6 @@ def parse_values_from_japan_etf(lines, pdf_name):
         elif Japan_ETF_end_marker1 in line or Japan_ETF_end_marker2 in line:
             break
         index += 1
-    #print("AA",final_values)
     return final_values
 
 # --------------------------------------------------------------------------------------------- #
@@ -55,28 +54,28 @@ def add_trade_data(lines, index):
     final_values = []
 
     # 2. Combine index 8 and 9 as they are part of 銘柄名
-    final_values.append(clean_line(lines[index] + lines[index + 1]))
+    final_values.append(Scripts.StringHelper.clean_line(lines[index] + lines[index + 1]))
 
     # 3. Separate three integers
     values = lines[index + 2].split()
     if len(values) == 3:
         for value in values:
-            value = clean_integer(value)
+            value = Scripts.StringHelper.clean_integer(value)
             final_values.append(value)
 
     # 4. Clean 銘柄コード parenthesis and empty spaces
-    ticker = clean_line(lines[index + 3])
-    ticker = clean_parenthesis(ticker)
+    ticker = Scripts.StringHelper.clean_line(lines[index + 3])
+    ticker = Scripts.ParsePatterns.clean_parenthesis(ticker)
     final_values.append(ticker)
 
     # 5. Add buy/sell
-    final_values.append(clean_line(lines[index + 4]))
+    final_values.append(Scripts.StringHelper.clean_line(lines[index + 4]))
 
     # 6. Add Buy/Sell Price
-    final_values.append(clean_integer(lines[index + 5]))
+    final_values.append(Scripts.ParsePatterns.clean_integer(lines[index + 5]))
 
     # 7. Clean ['市場', '取引', '受渡条件', '特定区分', '譲渡益税区分']
-    market_data = clean_line(lines[index + 6])
+    market_data = Scripts.StringHelper.clean_line(lines[index + 6])
     market_data = clean_market_data(market_data)
     final_values.extend(market_data)
 
@@ -86,28 +85,8 @@ def add_trade_data(lines, index):
 
 def add_pdf_and_dates(final_values, index, pdf_name, date1, date2):
     final_values.insert(index, pdf_name)
-    final_values.insert(index + 1, clean_line(StringHelper.clean_date_string(date1)))  # 約定日
-    final_values.insert(index + 2, clean_line(StringHelper.clean_date_string(date2)))  # ご精算日
-
-def clean_line(line):
-    newLine = line.strip()
-    newLine = unicodedata.normalize('NFKC', newLine)
-    newLine = newLine.replace("，", ".")
-    newLine = newLine.replace(",", ".")
-    newLine = newLine.replace(" ", "")
-    return newLine
-
-def clean_integer(line):
-    line = line.strip()
-    line = unicodedata.normalize('NFKC', line)
-    line = line.replace(",", "")
-    line = line.replace(" ", "")
-    return line
-
-def clean_parenthesis(line):
-    newLine = line.replace("(", "")
-    newLine = newLine.replace(")", "")
-    return newLine
+    final_values.insert(index + 1, Scripts.StringHelper.clean_line(StringHelper.clean_date_string(date1)))  # 約定日
+    final_values.insert(index + 2, Scripts.StringHelper.clean_line(StringHelper.clean_date_string(date2)))  # ご精算日
 
 def clean_market_data(line):
     #print("Market Data Before:", line)
@@ -139,7 +118,3 @@ def clean_market_data(line):
 
     #print("After:", result)
     return result
-
-
-
-
