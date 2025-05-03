@@ -43,25 +43,28 @@ def extract_text_from_pdf(pdf_path):
 
             # Trade Reports
             elif "Trade Report" == lines[2].strip():
-                print("Skipping trade report")
+                #print("Skipping trade report")
                 break # Dont read rest of the pages
 
             elif "取引残高報告書" == lines[0].strip():
-                print("Skipping Balance report #1")
+                #print("Skipping Balance report #1")
                 break  # Dont read rest of the pages
 
             elif "【送付のご案内】" == lines[6].strip() and "【お客様へのお知らせ】" == lines[13].strip():
-                print("Skipping Balance report #2 (明細)")
+                #print("Skipping Balance report #2 (明細)")
                 break  # Dont read rest of the pages
             #----------------------------------------------#
 
             # Dividends
             elif "外国株式等　配当金等のご案内" == lines[3].strip():
-                print("Skipping Foreign Dividend report")
+                #print("Skipping Foreign Dividend report")
                 break  # Dont read rest of the pages
 
+            #elif "外国株式等　株式分割・権利売却等のご案内" == lines[3].strip():
+                # Add this
+
             elif "Japan Dividend Report" == lines[2].strip():
-                print("Skipping Japan Dividend report")
+                #print("Skipping Japan Dividend report")
                 break  # Dont read rest of the pages
 
             # ----------------------------------------------#
@@ -89,7 +92,7 @@ def extract_text_from_all_pdfs():
         pdf_count = 0;
         for pdf_file in pdf_files:
             pdf_count += 1;
-            print(f"Extracting text from {pdf_file}... ({pdf_count}/{len(pdf_files)})")
+            #print(f"Extracting text from {pdf_file}... ({pdf_count}/{len(pdf_files)})")
             pdf_path = os.path.join(pdf_folder, pdf_file)
             result = extract_text_from_pdf(pdf_path)
 

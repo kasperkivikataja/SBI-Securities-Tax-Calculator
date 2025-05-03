@@ -34,7 +34,7 @@ def parse_values_from_japan_etf(lines, pdf_name):
     index = 0
 
     for line in lines[Japan_ETF_startIndex:]:
-        line = Scripts.StringHelper.clean_line_strip_and_unicode_normalize(line)
+        line = StringHelper.clean_line_strip_and_unicode_normalize(line)
 
         if line.startswith("市場"):
             addedValues = add_trade_data(lines, index)
@@ -54,28 +54,28 @@ def add_trade_data(lines, index):
     final_values = []
 
     # 2. Combine index 8 and 9 as they are part of 銘柄名
-    final_values.append(Scripts.StringHelper.clean_line(lines[index] + lines[index + 1]))
+    final_values.append(StringHelper.clean_line_empty_spaces(lines[index] + lines[index + 1]))
 
     # 3. Separate three integers
     values = lines[index + 2].split()
     if len(values) == 3:
         for value in values:
-            value = Scripts.StringHelper.clean_integer(value)
+            value = StringHelper.clean_line_empty_spaces(value)
             final_values.append(value)
 
     # 4. Clean 銘柄コード parenthesis and empty spaces
-    ticker = Scripts.StringHelper.clean_line(lines[index + 3])
-    ticker = Scripts.ParsePatterns.clean_parenthesis(ticker)
+    ticker = StringHelper.clean_line_empty_spaces(lines[index + 3])
+    ticker = StringHelper.clean_line_parenthesis(ticker)
     final_values.append(ticker)
 
     # 5. Add buy/sell
-    final_values.append(Scripts.StringHelper.clean_line(lines[index + 4]))
+    final_values.append(StringHelper.clean_line_empty_spaces(lines[index + 4]))
 
     # 6. Add Buy/Sell Price
-    final_values.append(Scripts.ParsePatterns.clean_integer(lines[index + 5]))
+    final_values.append(StringHelper.clean_line_empty_spaces(lines[index + 5]))
 
     # 7. Clean ['市場', '取引', '受渡条件', '特定区分', '譲渡益税区分']
-    market_data = Scripts.StringHelper.clean_line(lines[index + 6])
+    market_data = StringHelper.clean_line_empty_spaces(lines[index + 6])
     market_data = clean_market_data(market_data)
     final_values.extend(market_data)
 
@@ -85,8 +85,8 @@ def add_trade_data(lines, index):
 
 def add_pdf_and_dates(final_values, index, pdf_name, date1, date2):
     final_values.insert(index, pdf_name)
-    final_values.insert(index + 1, Scripts.StringHelper.clean_line(StringHelper.clean_date_string(date1)))  # 約定日
-    final_values.insert(index + 2, Scripts.StringHelper.clean_line(StringHelper.clean_date_string(date2)))  # ご精算日
+    final_values.insert(index + 1, StringHelper.clean_line_empty_spaces(StringHelper.clean_line_date_string(date1)))  # 約定日
+    final_values.insert(index + 2, StringHelper.clean_line_empty_spaces(StringHelper.clean_line_date_string(date2)))  # ご精算日
 
 def clean_market_data(line):
     #print("Market Data Before:", line)
