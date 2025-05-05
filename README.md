@@ -18,12 +18,12 @@ If your total annual trading profit is less than **200,000 yen**, you're not req
 
 **How This Tool Works**<br>
 **Option 1**: SBI CSV → Google Sheet (**Recommended – ~15 minutes**)<br>
-**Step 1**: Download your trade data in CSV format via the SBI trading portal (**~5 min**).<br>
-**Step 2**: Make a copy of [**Google Sheet**](https://docs.google.com/spreadsheets/d/1-1p-nymGCIPUYJOKJtw32qalqLQJ1PZBLULJ-K3VR1I/edit?gid=0#gid=0&range=A1) (**~5 min**). <br>
-**Step 3**: Paste CSV data into your Google Sheet and run the provided script (instructions are included in the Sheet) (**~5 min**).<br>
+1. Download your trade data in CSV format via the SBI trading portal (**~5 min**).
+2. Make a copy of [**Google Sheet**](https://docs.google.com/spreadsheets/d/1-1p-nymGCIPUYJOKJtw32qalqLQJ1PZBLULJ-K3VR1I/edit?gid=0#gid=0&range=A1) (**~5 min**).
+3. Paste CSV data into your Google Sheet and run the provided script (instructions are included in the Sheet) (**~5 min**).
 
 **Option 2**: SBI PDF → CSV → Google Sheet (**~30 min to several hours**)<br>
-**Step 1**: Download your trade data in PDF format via the SBI trading portal (**~30 min, depending on volume**).<br>
-**Step 2**: Convert the PDF to CSV manually or using a converter tool.<br>
-**Step 3**: Make a copy of [**Google Sheet**](https://docs.google.com/spreadsheets/d/1-1p-nymGCIPUYJOKJtw32qalqLQJ1PZBLULJ-K3VR1I/edit?gid=0#gid=0&range=A1) (**~5 min**)<br>
-**Step 4**: Paste the CSV data into your Google Sheet and run the provided script (**~5 min**).
+1. Download your trade data in PDF format via the SBI trading portal (**~30 min, depending on volume**).
+2. Convert the PDF to CSV manually or using a converter tool.
+3. Make a copy of [**Google Sheet**](https://docs.google.com/spreadsheets/d/1-1p-nymGCIPUYJOKJtw32qalqLQJ1PZBLULJ-K3VR1I/edit?gid=0#gid=0&range=A1) (**~5 min**)
+4. Paste the CSV data into your Google Sheet and run the provided script (**~5 min**)
