@@ -1,8 +1,8 @@
-**What**:
+**What**:<br>
 The **SBI Securities Tax Calculator** is a free automation tool designed to calculate taxes for users of **“Ippan Koza”** accounts.  
 Those using “Ippan Koza” accounts are responsible for calculating and reporting their earnings to the tax authorities each year.
 
-**Why**:
+**Why**:<br>
 Although SBI Securities provides CSV data of trades, these CSV files are often inconsistent and may lack necessary information. This software helps by:  
 - Calculating **Profit & Loss** data for **“Ippan Koza”** accounts  
 - Verifying your own tax calculations  
