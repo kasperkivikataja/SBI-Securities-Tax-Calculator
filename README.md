@@ -16,7 +16,7 @@ Although SBI Securities provides CSV data of trades, these CSV files are often i
 **Ippan Koza Merit 2**: Avoid paying unnecessary taxes.  
 If your total annual trading profit is less than **200,000 yen**, you're not required to pay taxes. However, in automatically taxed accounts, taxes are deducted from every sale—regardless of yearly profit. Reclaiming this tax requires additional steps, which can be avoided by using **“Ippan Koza”**.
 
-**How This Tool Works**
+**How This Tool Works**<br>
 **Option 1**: SBI CSV → Google Sheet (**Recommended – ~15 minutes**)<br>
 **Step 1**: Download your trade data in CSV format via the SBI trading portal (**~5 min**).<br>
 **Step 2**: Make a copy of [**Google Sheet**](https://docs.google.com/spreadsheets/d/1-1p-nymGCIPUYJOKJtw32qalqLQJ1PZBLULJ-K3VR1I/edit?gid=0#gid=0&range=A1) (**~5 min**). <br>
