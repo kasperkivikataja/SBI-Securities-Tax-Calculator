@@ -17,11 +17,10 @@ Although SBI Securities provides CSV data of trades, these CSV files are often i
 If your total annual trading profit is less than **200,000 yen**, you're not required to pay taxes. However, in automatically taxed accounts, taxes are deducted from every sale—regardless of yearly profit. Reclaiming this tax requires additional steps, which can be avoided by using **“Ippan Koza”**.
 
 **How This Tool Works**
-
-**Option 1**: SBI CSV → Google Sheet (**Recommended – ~15 minutes**)  
+**Option 1**: SBI CSV → Google Sheet (**Recommended – ~15 minutes**)
 **Step 1**: Download your trade data in CSV format via the SBI trading portal (**~5 min**).
 **Step 2**: Make a copy of [**Google Sheet**](https://docs.google.com/spreadsheets/d/1-1p-nymGCIPUYJOKJtw32qalqLQJ1PZBLULJ-K3VR1I/edit?gid=0#gid=0&range=A1) (**~5 min**). 
-**Step 3**: Paste CSV data into your Google Sheet and run the provided script (instructions are included in the Sheet) (**~5 min**).<br><br>
+**Step 3**: Paste CSV data into your Google Sheet and run the provided script (instructions are included in the Sheet) (**~5 min**).
 
 **Option 2**: SBI PDF → CSV → Google Sheet (**~30 min to several hours**)  
 **Step 1**: Download your trade data in PDF format via the SBI trading portal (**~30 min, depending on volume**).
