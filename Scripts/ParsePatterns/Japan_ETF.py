@@ -4,9 +4,7 @@
     Purpose: Parses Japan ETF PDF formatting and cleans it up for saving
 """
 
-import Scripts
 from Scripts import StringHelper
-import unicodedata
 import re
 
 ## Japan ETF markets to know where data starts/ends
@@ -21,6 +19,11 @@ Japan_ETF_headers = [
     # Note 2: "特定区分", "譲渡益税区分" can change depending on file
     "市場", "取引", "受渡条件", "(特定)区分", "譲渡益税区分"
 ]
+
+Japan_ETF_headers_English = [
+  "Contract Date", "Settlement Date", "Name", "Quantity", "Unit Price", "Contract Amount", "Ticker", "Transaction Type", "Settlement Amount",
+  "Market", "Transaction", "Settlement Condition", "Account Classification", "Capital Gains Tax Type"
+];
 
 Japan_ETF_known_keys = ['市場', '取引', '受渡条件', '特定区分', '譲渡益税区分']
 Japan_ETF_extra_keywords = ['NISA成長投資枠']  # Standalone labels that can appear after values
@@ -54,28 +57,35 @@ def add_trade_data(lines, index):
     final_values = []
 
     # 2. Combine index 8 and 9 as they are part of 銘柄名
-    final_values.append(StringHelper.clean_line_empty_spaces(lines[index] + lines[index + 1]))
+    value1 = StringHelper.clean_line_strip_and_unicode_normalize(lines[index])
+    value2 = StringHelper.clean_line_strip_and_unicode_normalize(lines[index + 1])
+    final_values.append(value1 + value2)
 
     # 3. Separate three integers
     values = lines[index + 2].split()
     if len(values) == 3:
         for value in values:
-            value = StringHelper.clean_line_empty_spaces(value)
+            value = StringHelper.clean_line_strip_and_unicode_normalize(value)
+            value = StringHelper.replace_commas_with_empty(value)
+            value = StringHelper.replace_dots_with_empty(value)
             final_values.append(value)
 
     # 4. Clean 銘柄コード parenthesis and empty spaces
-    ticker = StringHelper.clean_line_empty_spaces(lines[index + 3])
+    ticker = StringHelper.clean_line_strip_and_unicode_normalize(lines[index + 3])
     ticker = StringHelper.clean_line_parenthesis(ticker)
     final_values.append(ticker)
 
     # 5. Add buy/sell
-    final_values.append(StringHelper.clean_line_empty_spaces(lines[index + 4]))
+    final_values.append(StringHelper.clean_line_strip_and_unicode_normalize(lines[index + 4]))
 
     # 6. Add Buy/Sell Price
-    final_values.append(StringHelper.clean_line_empty_spaces(lines[index + 5]))
+    value = StringHelper.clean_line_strip_and_unicode_normalize(lines[index + 5])
+    value = StringHelper.replace_commas_with_empty(value)
+    value = StringHelper.replace_dots_with_empty(value)
+    final_values.append(value)
 
     # 7. Clean ['市場', '取引', '受渡条件', '特定区分', '譲渡益税区分']
-    market_data = StringHelper.clean_line_empty_spaces(lines[index + 6])
+    market_data = StringHelper.clean_line_strip_and_unicode_normalize(lines[index + 6])
     market_data = clean_market_data(market_data)
     final_values.extend(market_data)
 
@@ -85,8 +95,8 @@ def add_trade_data(lines, index):
 
 def add_pdf_and_dates(final_values, index, pdf_name, date1, date2):
     final_values.insert(index, pdf_name)
-    final_values.insert(index + 1, StringHelper.clean_line_empty_spaces(StringHelper.clean_line_date_string(date1)))  # 約定日
-    final_values.insert(index + 2, StringHelper.clean_line_empty_spaces(StringHelper.clean_line_date_string(date2)))  # ご精算日
+    final_values.insert(index + 1, StringHelper.clean_line_date_string(StringHelper.clean_line_strip_and_unicode_normalize(date1)))  # 約定日
+    final_values.insert(index + 2, StringHelper.clean_line_date_string(StringHelper.clean_line_strip_and_unicode_normalize(date2)))  # ご精算日
 
 def clean_market_data(line):
     #print("Market Data Before:", line)

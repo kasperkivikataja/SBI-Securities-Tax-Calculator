@@ -30,14 +30,12 @@ def commit(extracted_data, output_folder):
             # Process Foreign format
             if file_format == "Foreign":
                 #print("Processing Foreign format...")
-
                 # Chunk the values into rows of 23 items each
                 foreign_rows.extend(chunk_list(values, Scripts.ParsePatterns.Foreign_ETF.Foreign_ETF_expected_value_count))
 
             # Process Japan format
             elif file_format == "Japan":
                 #print("Processing Japan format...")
-
                 # Chunk the values into rows of ? items each
                 japan_rows.extend(chunk_list(values, Scripts.ParsePatterns.Japan_ETF.Japan_ETF_expected_value_count))
 
@@ -53,17 +51,27 @@ def commit(extracted_data, output_folder):
 
         # Write Foreign ETF CSV if there are rows to write
         if foreign_rows:
+            japanese = Scripts.ParsePatterns.Foreign_ETF.Foreign_ETF_headers
+            english = Scripts.ParsePatterns.Foreign_ETF.Foreign_ETF_headers_English
+
+            combined_headers = [f"{jp} ({en})" for jp, en in zip(japanese, english)]
+
             write_csv(
                 os.path.join(output_folder, "foreign_etf_output.csv"),
-                Scripts.ParsePatterns.Foreign_ETF.Foreign_ETF_headers,
+                combined_headers,
                 foreign_rows
             )
 
         # Write Japan ETF CSV if there are rows to write
         if japan_rows:
+            japanese = Scripts.ParsePatterns.Japan_ETF.Japan_ETF_headers
+            english = Scripts.ParsePatterns.Japan_ETF.Japan_ETF_headers_English
+
+            combined_headers = [f"{jp} ({en})" for jp, en in zip(japanese, english)]
+
             write_csv(
                 os.path.join(output_folder, "japan_etf_output.csv"),
-                Scripts.ParsePatterns.Japan_ETF.Japan_ETF_headers,
+                combined_headers,
                 japan_rows
             )
 

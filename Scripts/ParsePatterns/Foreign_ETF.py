@@ -8,14 +8,21 @@ from operator import index
 import Scripts
 
 Foreign_ETF_start_marker = "お問合せ先:"
-Foreign_ETF_end_marker = "**   以   上   **"
+Foreign_ETF_end_marker = "**以上**"
 Foreign_ETF_expected_value_count = 24 # 23 values + PDF name in the end
 
-# Headers used by SaveData to
+# Headers used by SaveData (Important: Also used within logic to ignore fields)
 Foreign_ETF_headers = [
-    "国内約定年月日", "国内受渡年月日", "現地約定年月日", "現地受渡年月日", "銘柄コード", "銘柄名", "取引の種類", "取引通貨", "売買", "決済方法",
+    "国内約定年月日", "現地約定年月日", "国内受渡年月日", "現地受渡年月日", "銘柄コード", "銘柄名", "取引の種類", "取引通貨", "売買", "決済方法",
     "自己・委託", "為替レート", "市場", "口座区分", "約定数量", "約定価格", "約定金額", "現地手数料等", "外貨 (現地精算金額)", "円貨 (現地精算金額)", "国内手数料",
     "消費税", "受渡金額"
+]
+
+# Headers in Japanese, for translation.
+Foreign_ETF_headers_English = [
+  "Domestic Contract Date", "Local Contract Date", "Domestic Settlement Date", "Local Settlement Date", "Security Code", "Security Name", "Transaction Type", "Transaction Currency", "Buy/Sell", "Settlement Method",
+  "Proprietary/Agency", "Exchange Rate", "Market", "Account Type", "Contract Quantity", "Contract Price", "Contract Amount", "Local Fees", "Foreign Currency (Local Settlement Amount)", "Yen (Local Settlement Amount)", "Domestic Fees",
+  "Consumption Tax", "Settlement Amount"
 ]
 
 # A helper list to help us skip lines
@@ -84,6 +91,7 @@ def remove_dots_from_integers(final_values):
 
         for idx in Foreign_ETF_clean_integer_indexes:
             if idx < len(chunk):
+                chunk[idx] = Scripts.StringHelper.replace_commas_with_empty(chunk[idx])
                 chunk[idx] = Scripts.StringHelper.replace_dots_with_empty(chunk[idx])
 
         # Replace the chunk in the original list
