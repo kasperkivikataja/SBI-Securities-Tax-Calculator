@@ -5,10 +5,10 @@ Those using “Ippan Koza” accounts are responsible for calculating and report
 ---
 
 **Why**:<br>
-Although SBI Securities provides CSV data of trades, these CSV files are often inconsistent and may lack necessary information. This software helps by:  
-- Calculating **Profit & Loss** data for **“Ippan Koza”** accounts  
-- Verifying your own tax calculations  
-- Providing an alternative way to parse **PDF** trade data  
+SBI Securities provides CSV and PDF data of trades, but no calculation for taxes. These files are also often inconsistent and may lack information depending on your needs. In short, this software:
+- Provides profit & loss calculation to understand your tax liabilities
+- Can be used to verify your own tax calculations
+- Provides a way to parse PDF trade data into CSV files
 
 **Ippan Koza Merit 1**: You retain more capital throughout the tax year, allowing you to maximize profits. This is particularly beneficial if:  
 - Your trading account is large  
